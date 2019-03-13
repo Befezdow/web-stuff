@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Canvas Drawer</title>
+</head>
+<body style="margin: 0">
+    <canvas id="canvas"> Sry, bro. Yo browser is useless. :( </canvas>
+
+    <script lang="javascript">
+        let canvas = document.getElementById('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let context = canvas.getContext('2d');
+
+        context.translate(canvas.width / 2, canvas.height / 2);
+
+        let grad = context.createLinearGradient(-200, -200, 200, 200);
+        grad.addColorStop(0, 'red');
+        grad.addColorStop(0.5, 'magenta');
+        grad.addColorStop(1, 'blue');
+
+        context.fillStyle = grad;
+
+        const max = 200;
+        const min = 0;
+        const middleX = 0;
+        const middleY = 0;
+        let i = 1;
+        let delta = 1;
+
+        setInterval(() => {
+            context.beginPath();
+            context.moveTo(middleX - i, middleY);
+            context.lineTo(middleX, middleY - i);
+            context.lineTo(middleX + i, middleY);
+            context.lineTo(middleX, middleY + i);
+            context.closePath();
+            context.fill();
+            context.stroke();
+
+            if (i >= max || i <= min) {
+                delta = -delta;
+            }
+
+            i = i + delta;
+            context.rotate((Math.PI / 180) * i / 100);
+
+        }, 10);
+    </script>
+</body>
+</html>

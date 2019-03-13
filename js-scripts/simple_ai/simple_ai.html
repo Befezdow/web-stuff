@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Simple drawer</title>
+    
+    <script src="brain.js/browser.min.js"></script>
+</head>
+<body style="background: lightgray;">
+    <canvas id="canvas" style="background: white; display: block; margin:0 auto"> Sry, bro. Yo browser is useless. :( </canvas>
+
+    <script lang="javascript">
+        class AI {
+           constructor(canvas, cellSize = 20) {
+               this.canvasSize = {x: canvas.width, y: canvas.height};
+               this.context = canvas.getContext('2d');
+               this.context.lineJoin = 'bevel';
+               
+               this.cellSize = cellSize;
+               this.widthInCells = canvas.width / cellSize;
+               this.heightInCells = canvas.height / cellSize;
+
+               this.dataToTrain = [];
+               
+               this.isMouseDown = false;
+               this.prevPoint = null;
+
+               canvas.addEventListener('mousedown', (event) => {
+                   this.isMouseDown = true;
+                   this.prevPoint = {x: event.layerX, y: event.layerY};
+               });
+
+               canvas.addEventListener('mouseup', (event) => {
+                   this.isMouseDown = false;
+                   let currentPoint = {x: event.layerX, y: event.layerY};
+                   this.drawNode(currentPoint, 5);
+               });
+
+               canvas.addEventListener('mousemove', (event) => {
+                   if (this.isMouseDown) {
+                       let currentPoint = {x: event.layerX, y: event.layerY};
+                       this.drawNode(currentPoint, 5);
+                       this.drawLine(this.prevPoint, currentPoint);
+                       this.prevPoint = currentPoint;
+                   }
+               });
+               
+               window.addEventListener('keypress', (event) => {
+                   switch (event.key.toLowerCase()) {
+                       case 'c':
+                           this.clearCanvas();
+                           break;
+                       case 'e':
+                           let data = this.extractData();
+                           let output = {negative: 1};
+                           if (confirm('Is it positive?')) {
+                               output = {positive: 1};
+                           }
+    
+                           this.dataToTrain.push({input: data, output: output});
+                           this.clearCanvas();
+                           break;
+                       case 'b':
+                           let net = new brain.NeuralNetwork();
+                           net.train(this.dataToTrain, {log: true});
+    
+                           const result = brain.likely(this.extractData(), net);
+                           alert(result);
+                   }
+               });
+           }
+
+            drawNode(point, radius) {
+                this.context.fillStyle = 'black';
+               
+                this.context.beginPath();
+                this.context.arc(point.x, point.y, radius, 0, Math.PI * 2);
+                this.context.fill();
+            }
+
+            drawLine(point1, point2, color = 'black', width = 10) {
+                this.context.strokeStyle = color;
+                this.context.lineWidth = width;
+               
+                this.context.beginPath();
+                this.context.moveTo(point1.x, point1.y);
+                this.context.lineTo(point2.x, point2.y);
+                this.context.stroke();
+            }
+            
+            clearCanvas() {
+               this.context.clearRect(0, 0, this.canvasSize.x, this.canvasSize.y);
+            }
+            
+            drawGrid() {
+                for (let i = 0; i < this.widthInCells + 1; i++) {
+                    this.drawLine(
+                        {x: i * this.cellSize, y: 0},
+                        {x: i * this.cellSize, y: this.heightInCells * this.cellSize},
+                        'lightgray',
+                        1
+                    );
+                }
+    
+                for (let i = 0; i < this.heightInCells + 1; i++) {
+                    this.drawLine(
+                        {x: 0, y: i * this.cellSize},
+                        {x: this.widthInCells * this.cellSize, y: i * this.cellSize},
+                        'lightgray',
+                        1
+                    );
+                }
+            }
+            
+            drawCell(x, y, size, color='black') {
+                this.context.fillStyle = color;
+                this.context.fillRect(x * size, y * size, size, size);
+            }
+            
+            extractData(draw = false) {
+               let dataToDraw = [];
+               let extractedData = [];
+               for (let i = 0; i < this.widthInCells; i++) {
+                   for (let j = 0; j < this.heightInCells; j++) {
+                       let chunk = this.context.getImageData(i * this.cellSize, j * this.cellSize, this.cellSize, this.cellSize);
+                       let nonEmptyPixelsCount = 0;
+                       
+                       for (let k = 0; k < chunk.data.length; k += 7) {
+                           if (chunk.data[k] !== 0) {
+                               nonEmptyPixelsCount ++;
+                           }
+                       }
+    
+                       extractedData.push(nonEmptyPixelsCount > 0);
+                       
+                       if (nonEmptyPixelsCount > 0 && draw) {
+                           dataToDraw.push({x: i, y: j});
+                       }
+                   }
+               }
+               
+               if (draw) {
+                   this.clearCanvas();
+                   this.drawGrid();
+                   for (let elem of dataToDraw) {
+                       this.drawCell(elem.x, elem.y, this.cellSize, 'blue');
+                   }
+               }
+               
+               return extractedData;
+            }
+        }
+
+        const canvas = document.getElementById('canvas');
+        canvas.width = 500;
+        canvas.height = 500;
+        
+        const ai = new AI(canvas);
+    </script>
+</body>
+</html>

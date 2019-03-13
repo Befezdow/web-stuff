@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Snake</title>
+</head>
+<body style="margin: 0">
+    <canvas id="canvas"> Sry, bro. Yo browser is useless. :( </canvas>
+
+    <script lang="javascript">
+        let canvas = document.getElementById('canvas');
+
+        const Direction = {
+            LEFT: 'LEFT',
+            RIGHT: 'RIGHT',
+            TOP: 'TOP',
+            BOTTOM: 'BOTTOM'
+        };
+
+        class Snake {
+
+            constructor(canvas, fieldSize, nodeSize, startSize) {
+                canvas.width = fieldSize;
+                canvas.height = fieldSize;
+
+                this.context = canvas.getContext('2d');
+
+                this.nodesPerSide = Math.floor(fieldSize / nodeSize);
+                this.nodeSize = nodeSize;
+                this.fieldSize = fieldSize;
+
+                this.food = null;
+
+                this.currentDirection = Direction.RIGHT;
+                this.currentPositions = [];
+
+                for (let i = 0; i < startSize; i++) {
+                    this.currentPositions.push({x: 0, y: 0})
+                }
+
+                document.addEventListener('keydown', (e) => {
+                    switch (e.keyCode) {
+                        case 37:
+                            if (!(this.currentPositions.length > 1 && this.currentDirection === Direction.RIGHT)) {
+                                this.currentDirection = Direction.LEFT;
+                            }
+                            break;
+                        case 38:
+                            if (!(this.currentPositions.length > 1 && this.currentDirection === Direction.BOTTOM)) {
+                                this.currentDirection = Direction.TOP;
+                            }
+                            break;
+                        case 39:
+                            if (!(this.currentPositions.length > 1 && this.currentDirection === Direction.LEFT)) {
+                                this.currentDirection = Direction.RIGHT;
+                            }
+                            break;
+                        case 40:
+                            if (!(this.currentPositions.length > 1 && this.currentDirection === Direction.TOP)) {
+                                this.currentDirection = Direction.BOTTOM;
+                            }
+                            break;
+                    }
+                });
+
+                document.addEventListener('scroll', () => scrollTo(0, 0));
+            }
+
+            drawGrid() {
+                if (!this.nodesPerSide) {
+                    alert(`Can't draw grid`);
+                }
+
+                this.context.beginPath();
+                for (let i = 0; i <= this.nodesPerSide; i++) {
+                    this.context.moveTo(i * this.nodeSize, 0);
+                    this.context.lineTo(i * this.nodeSize, this.nodesPerSide * this.nodeSize)
+                }
+
+                for (let i = 0; i <= this.nodesPerSide; i++) {
+                    this.context.moveTo(0, i * this.nodeSize);
+                    this.context.lineTo(this.nodesPerSide * this.nodeSize, i * this.nodeSize)
+                }
+
+                this.context.strokeStyle = 'lightgray';
+                this.context.stroke();
+
+                this.context.beginPath();
+                this.context.moveTo(0, 0);
+                this.context.lineTo(this.nodesPerSide * this.nodeSize, 0);
+                this.context.lineTo(this.nodesPerSide * this.nodeSize, this.nodesPerSide * this.nodeSize);
+                this.context.lineTo(0, this.nodesPerSide * this.nodeSize);
+                this.context.closePath();
+
+                this.context.strokeStyle = 'black';
+                this.context.stroke();
+            }
+
+            redraw() {
+                this.clear();
+                this.drawGrid();
+                this.drawSnake();
+                this.drawFood();
+            }
+
+            clear() {
+                this.context.clearRect(0, 0, this.fieldSize, this.fieldSize);
+            }
+
+            drawSnake() {
+                let temp = 0;
+                let delta = Math.floor(128 / this.currentPositions.length);
+
+                for (let elem of this.currentPositions.slice().reverse()) {
+                    this.context.fillStyle = `rgb(${128 - temp}, ${128 - temp}, ${128 - temp})`;
+                    this.context.fillRect(elem.x * this.nodeSize, elem.y * this.nodeSize, this.nodeSize, this.nodeSize);
+                    temp += delta;
+                }
+            }
+
+            drawFood() {
+                this.context.fillStyle = 'red';
+                this.context.fillRect(this.food.x * this.nodeSize, this.food.y * this.nodeSize, this.nodeSize, this. nodeSize);
+                this.context.fillStyle = 'black';
+            }
+
+            move() {
+                let nextPos = JSON.parse(JSON.stringify(this.currentPositions[0]));
+                switch (this.currentDirection) {
+                    case Direction.LEFT:
+                        if (nextPos.x === 0) {
+                            nextPos.x = this.nodesPerSide - 1;
+                        } else {
+                            nextPos.x--;
+                        }
+                        break;
+                    case Direction.RIGHT:
+                        if (nextPos.x === this.nodesPerSide - 1) {
+                            nextPos.x = 0;
+                        } else {
+                            nextPos.x++;
+                        }
+                        break;
+                    case Direction.TOP:
+                        if (nextPos.y === 0) {
+                            nextPos.y = this.nodesPerSide - 1;
+                        } else {
+                            nextPos.y--;
+                        }
+                        break;
+                    case Direction.BOTTOM:
+                        if (nextPos.y === this.nodesPerSide - 1) {
+                            nextPos.y = 0;
+                        } else {
+                            nextPos.y++;
+                        }
+                        break;
+                }
+
+                this.currentPositions.unshift(nextPos);
+
+                if (JSON.stringify(nextPos) !== JSON.stringify(this.food)) {
+                    this.currentPositions.pop();
+                } else {
+                    this.addFood();
+                }
+            }
+
+            addFood() {
+                this.food = {
+                    x: Math.floor(Math.random() * this.nodesPerSide),
+                    y: Math.floor(Math.random() * this.nodesPerSide),
+                }
+            }
+
+            run(tickInterval) {
+                this.addFood();
+                this.loop = setInterval(() => {
+                    this.move();
+                    this.redraw();
+                }, tickInterval);
+            }
+
+            stop() {
+                clearInterval(this.loop);
+            }
+        }
+
+        let snake = new Snake(canvas, window.innerHeight, 50, 1);
+        snake.run(150);
+
+    </script>
+</body>
+</html>
