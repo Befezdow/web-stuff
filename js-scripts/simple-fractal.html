@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Canvas Drawer</title>
+</head>
+<body style="margin: 0">
+    <canvas id="canvas"> Sry, bro. Yo browser is useless. :( </canvas>
+
+    <script lang="javascript">
+        let canvas = document.getElementById('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let context = canvas.getContext('2d');
+
+        const branchesCount = 4;
+        const branchesAngle = 50;
+        const lengthModifier = 0.8;
+        const widthModifier = 0.7;
+        const startLength = 200;
+        const startAngle = 0;
+        const startWidth = 2;
+        const minLength = 30;
+
+        function draw(startX, startY, fragmentLength, angle, branchWidth) {
+            context.lineWidth = branchWidth;
+            context.strokeStyle = "green";
+            context.fillStyle = "green";
+
+            context.save();
+
+            context.translate(startX, startY);
+            context.rotate(angle * Math.PI / 180);
+            context.beginPath();
+            context.moveTo(0, 0);
+            context.lineTo(0, -fragmentLength);
+            context.stroke();
+
+            if (fragmentLength < minLength) {
+                context.restore();
+                return;
+            }
+
+            const baseAngle = - branchesAngle / 2;
+            const offsetAngle = branchesAngle / (branchesCount - 1);
+            for (let i = 0; i < branchesCount; i++) {
+                draw(0, -fragmentLength, fragmentLength * lengthModifier, angle + baseAngle + i * offsetAngle, branchWidth * widthModifier);
+            }
+
+            context.restore();
+        }
+
+        draw(canvas.width / 2, canvas.height, startLength, startAngle, startWidth);
+    </script>
+</body>
+</html>

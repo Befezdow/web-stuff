@@ -19,14 +19,15 @@
 
         context.translate(canvas.width / 2, canvas.height / 2);
 
-        let grad = context.createLinearGradient(-200, -200, 200, 200);
+        let grad = context.createLinearGradient(-400, -400, 400, 400);
         grad.addColorStop(0, 'red');
         grad.addColorStop(0.5, 'magenta');
         grad.addColorStop(1, 'blue');
 
         context.fillStyle = grad;
+        context.lineWidth = 0;
 
-        const max = 200;
+        const max = 400;
         const min = 0;
         const middleX = 0;
         const middleY = 0;
@@ -36,9 +37,9 @@
         setInterval(() => {
             context.beginPath();
             context.moveTo(middleX - i, middleY);
-            context.lineTo(middleX, middleY - i);
+            context.lineTo(middleX, middleY - 5);
             context.lineTo(middleX + i, middleY);
-            context.lineTo(middleX, middleY + i);
+            context.lineTo(middleX, middleY + 5);
             context.closePath();
             context.fill();
             context.stroke();

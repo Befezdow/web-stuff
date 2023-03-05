@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Canvas Drawer</title>
+</head>
+<body style="margin: 0">
+    <canvas id="canvas"> Sry, bro. Yo browser is useless. :( </canvas>
+
+    <script lang="javascript">
+        let canvas = document.getElementById('canvas');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let context = canvas.getContext('2d');
+
+        var canvasWidth = canvas.width;
+        var canvasHeight = canvas.height;
+        var canvasData = context.getImageData(0, 0, canvasWidth, canvasHeight);
+
+        // Draw single pixel to the imageData //
+        function drawPixel (x, y, r, g, b, a) {
+            var index = (x + y * canvasWidth) * 4;
+
+            canvasData.data[index + 0] = r;
+            canvasData.data[index + 1] = g;
+            canvasData.data[index + 2] = b;
+            canvasData.data[index + 3] = a;
+        }
+
+        //Convert hue value to rgb
+        function hToRgb(h){
+            if (h == 1)
+              return [0,0,0];
+            let r, g, b;
+            let i = Math.floor(h * 6);
+            let f = h * 6 - i;
+            switch(i % 6){
+                case 0: r = 1, g = f, b = 0; break;
+                case 1: r = f, g = 1, b = 0; break;
+                case 2: r = 0, g = 1, b = f; break;
+                case 3: r = 0, g = f, b = 1; break;
+                case 4: r = f, g = 0, b = 1; break;
+                case 5: r = 1, g = 0, b = f; break;
+            }
+            return [r * 255, g * 255, b * 255];
+        }
+
+        width = 3.5;
+        height = 2;
+        xoffset = 0;
+        yoffset = 0;
+
+        for (let px = 0; px < canvasWidth; px++) {
+          for (let py = 0; py < canvasHeight; py++) {
+              
+            let x0 = (px / canvasWidth) * width + (xoffset - 2.5);
+            let y0 = (py / canvasHeight) * height + (yoffset - 1);
+            let x = 0;
+            let y = 0;
+            let iter = 0;
+            let max_iter = 128;
+              
+            while ((x * x + y * y) < 4 && iter < max_iter) {
+              let x_temp = x * x - y * y + x0;
+              y = 2 * x * y + y0;
+              x = x_temp;
+              iter++;
+            }
+              
+            var rgb = hToRgb(iter / max_iter);
+            drawPixel(px, py, rgb[0], rgb[1], rgb[2], 255);
+          } 
+        }
+        context.putImageData(canvasData, 0, 0);
+    </script>
+</body>
+</html>
